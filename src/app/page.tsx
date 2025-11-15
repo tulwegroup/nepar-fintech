@@ -223,6 +223,41 @@ export default function NEPARDashboard() {
     }
   }
 
+  const handleRunAIReconciliation = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/reconciliation-advanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          periodStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          periodEnd: new Date().toISOString(),
+          useAI: true
+        })
+      })
+      
+      if (response.ok) {
+        await fetchDashboardData() // Refresh data
+      }
+    } catch (error) {
+      console.error('Error running AI reconciliation:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBlockchainVerification = async () => {
+    try {
+      const response = await fetch('/api/blockchain?action=GET_LEDGER_SNAPSHOT')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Blockchain Ledger:', data)
+      }
+    } catch (error) {
+      console.error('Error fetching blockchain data:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -244,9 +279,17 @@ export default function NEPARDashboard() {
                   <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Run Reconciliation
                 </Button>
+                <Button variant="outline" size="sm" onClick={handleRunAIReconciliation} disabled={isLoading}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Run AI Reconciliation
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleRunNetting} disabled={isLoading}>
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Run Netting
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleBlockchainVerification} disabled={isLoading}>
+                  <Activity className="h-4 w-4 mr-2" />
+                  Verify Blockchain
                 </Button>
               </>
             )}
