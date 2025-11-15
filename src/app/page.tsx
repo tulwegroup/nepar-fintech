@@ -22,7 +22,8 @@ import {
   ArrowDownRight,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react'
 
 // Types for dashboard data
@@ -468,20 +469,33 @@ export default function NEPARDashboard() {
 
           {/* Treasury Control Room */}
           <TabsContent value="treasury" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <KPICard title="Settlement Queue" value={12} icon={Clock} format="number" isLoading={isLoading} />
-              <KPICard title="Escrow Balance" value={2340000000} icon={DollarSign} isLoading={isLoading} />
-              <KPICard title="Pending Approvals" value={3} icon={FileText} format="number" isLoading={isLoading} />
-            </div>
-            
             <Card>
               <CardHeader>
-                <CardTitle>Settlement Batches</CardTitle>
-                <CardDescription>Ready for Treasury approval and execution</CardDescription>
+                <CardTitle className="flex items-center">
+                  <DollarSign className="h-5 w-5 mr-2" />
+                  Treasury Control Room
+                </CardTitle>
+                <CardDescription>
+                  Complete settlement queue and escrow management system
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  Treasury Control Room functionality will be implemented here
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <KPICard title="Settlement Queue" value={12} icon={Clock} format="number" isLoading={isLoading} />
+                  <KPICard title="Escrow Balance" value={2340000000} icon={DollarSign} isLoading={isLoading} />
+                  <KPICard title="Pending Approvals" value={3} icon={FileText} format="number" isLoading={isLoading} />
+                </div>
+                
+                <div className="text-center py-8">
+                  <Button asChild size="lg">
+                    <a href="/treasury" className="flex items-center">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Treasury Control Room
+                    </a>
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Access comprehensive settlement management, escrow monitoring, and liquidity forecasting
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -489,20 +503,33 @@ export default function NEPARDashboard() {
 
           {/* Agency Workspace */}
           <TabsContent value="agency" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <KPICard title="Unmatched Items" value={23} icon={AlertTriangle} format="number" isLoading={isLoading} />
-              <KPICard title="Expected Receipts" value={567000000} icon={DollarSign} isLoading={isLoading} />
-              <KPICard title="Dispute Console" value={8} icon={FileText} format="number" isLoading={isLoading} />
-            </div>
-            
             <Card>
               <CardHeader>
-                <CardTitle>Agency CFO Workspace</CardTitle>
-                <CardDescription>Manage invoices, disputes, and payments</CardDescription>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Agency CFO Workspace
+                </CardTitle>
+                <CardDescription>
+                  Complete aging reports, payment approvals, and dispute management
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  Agency CFO Workspace functionality will be implemented here
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <KPICard title="Unmatched Items" value={23} icon={AlertTriangle} format="number" isLoading={isLoading} />
+                  <KPICard title="Expected Receipts" value={567000000} icon={DollarSign} isLoading={isLoading} />
+                  <KPICard title="Dispute Console" value={8} icon={FileText} format="number" isLoading={isLoading} />
+                </div>
+                
+                <div className="text-center py-8">
+                  <Button asChild size="lg">
+                    <a href="/cfo" className="flex items-center">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Agency CFO Workspace
+                    </a>
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Access aging reports, payment approvals, and dispute resolution tools
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -510,20 +537,33 @@ export default function NEPARDashboard() {
 
           {/* Audit View */}
           <TabsContent value="audit" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-              <KPICard title="Reconciliation Coverage" value={94.2} icon={CheckCircle} format="percentage" isLoading={isLoading} />
-              <KPICard title="Exceptions by Reason" value={15} icon={AlertTriangle} format="number" isLoading={isLoading} />
-              <KPICard title="Audit Trail Entries" value={12847} icon={FileText} format="number" isLoading={isLoading} />
-            </div>
-            
             <Card>
               <CardHeader>
-                <CardTitle>Audit & Donor Read-Only View</CardTitle>
-                <CardDescription>Immutable audit trail and compliance reports</CardDescription>
+                <CardTitle className="flex items-center">
+                  <Activity className="h-5 w-5 mr-2" />
+                  Audit & Compliance View
+                </CardTitle>
+                <CardDescription>
+                  Immutable audit trail and compliance monitoring
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  Audit View functionality will be implemented here
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <KPICard title="Reconciliation Coverage" value={94.2} icon={CheckCircle} format="percentage" isLoading={isLoading} />
+                  <KPICard title="Exceptions by Reason" value={15} icon={AlertTriangle} format="number" isLoading={isLoading} />
+                  <KPICard title="Audit Trail Entries" value={12847} icon={FileText} format="number" isLoading={isLoading} />
+                </div>
+                
+                <div className="text-center py-8">
+                  <Button asChild size="lg">
+                    <a href="/audit" className="flex items-center">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Audit & Compliance View
+                    </a>
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Access audit logs, compliance reports, and blockchain verification
+                  </p>
                 </div>
               </CardContent>
             </Card>
