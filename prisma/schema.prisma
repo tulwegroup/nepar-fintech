@@ -1,0 +1,290 @@
+// NEPAR - National Energy Payment & Arrears Reconciliation System
+// Database Schema for Energy Sector Financial Reconciliation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Parties in the energy sector (GEN, TRANS, DIST, FUEL, REG, FIN)
+model Party {
+  id                String   @id @default(cuid())
+  partyId           String   @unique // Canonical business ID
+  name              String
+  type              PartyType
+  bankDetails       String?  // IBAN/BIC format
+  taxId             String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relationships
+  contractsAsPartyA Contract[] @relation("PartyA_Contracts")
+  contractsAsPartyB Contract[] @relation("PartyB_Contracts")
+  invoicesIssued    Invoice[]  @relation("IssuedInvoices")
+  invoicesReceived  Invoice[]  @relation("ReceivedInvoices")
+  paymentsMade      Payment[]  @relation("PaymentsMade")
+  paymentsReceived  Payment[]  @relation("PaymentsReceived")
+  disputesRaised    Dispute[]  @relation("DisputesRaised")
+  disputesReceived  Dispute[]  @relation("DisputesReceived")
+
+  @@map("parties")
+}
+
+enum PartyType {
+  GENERATOR  // VRA, IPP Alpha, IPP Beta
+  TRANSMISSION  // GRIDCo
+  DISTRIBUTOR  // ECG
+  FUEL_SUPPLIER  // GNPC, BOST
+  REGULATOR  // PURC
+  FINANCIAL  // MoF/CAGD, Partner Bank
+}
+
+// Contracts between parties (PPA, GSA, FSA, Wheeling)
+model Contract {
+  id              String   @id @default(cuid())
+  contractId      String   @unique // Canonical business ID
+  partyAId        String
+  partyBId        String
+  type            ContractType
+  pricingFormula  String   // JSON or formula string
+  meteringPoints  String?  // JSON array of meter IDs
+  slas            String?  // JSON with SLA definitions
+  startDate       DateTime
+  endDate         DateTime?
+  currency        String   @default("GHS")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  partyA          Party     @relation("PartyA_Contracts", fields: [partyAId], references: [id])
+  partyB          Party     @relation("PartyB_Contracts", fields: [partyBId], references: [id])
+  invoices        Invoice[]
+  deliveries      Delivery[]
+  disputes        Dispute[]
+
+  @@map("contracts")
+}
+
+enum ContractType {
+  PPA  // Power Purchase Agreement
+  GSA  // Gas Supply Agreement
+  FSA  // Fuel Supply Agreement
+  WHEELING  // Transmission Wheeling Agreement
+}
+
+// Invoices between parties
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceId       String   @unique // Canonical business ID
+  contractId      String
+  issuerId        String
+  counterpartyId  String
+  periodStart     DateTime
+  periodEnd       DateTime
+  currency        String   @default("GHS")
+  totalAmount     Float
+  taxAmount       Float?
+  lineItems       String   // JSON with energy (MWh), gas (mmscf), fuel (ltrs)
+  status          InvoiceStatus @default(PENDING)
+  confidenceScore Float?   // Reconciliation confidence 0-100
+  matchedDeliveries String? // JSON array of delivery IDs
+  hash            String   // Content hash for integrity
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  contract        Contract @relation(fields: [contractId], references: [id])
+  issuer          Party    @relation("IssuedInvoices", fields: [issuerId], references: [id])
+  counterparty    Party    @relation("ReceivedInvoices", fields: [counterpartyId], references: [id])
+  payments        Payment[]
+  disputes        Dispute[]
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  PENDING
+  MATCHED
+  PARTIALLY_MATCHED
+  DISPUTED
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+}
+
+// Energy/Gas/Fuel deliveries
+model Delivery {
+  id              String   @id @default(cuid())
+  deliveryId      String   @unique // Canonical business ID
+  contractId      String
+  timestamp       DateTime
+  meterReadStart  Float
+  meterReadEnd    Float
+  quantity        Float    // MWh for electricity, mmscf for gas, liters for fuel
+  sourceSystem    String   // SCADA, AMI, ERP system name
+  proofHash       String?  // Hash of supporting documents
+  fileReference   String?  // Reference to proof files
+  qualityScore    Float?   // Data quality 0-100
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  contract        Contract @relation(fields: [contractId], references: [id])
+
+  @@map("deliveries")
+}
+
+// Payments between parties
+model Payment {
+  id              String   @id @default(cuid())
+  paymentId       String   @unique // Canonical business ID
+  invoiceId       String?
+  payerId         String
+  payeeId         String
+  amount          Float
+  currency        String   @default("GHS")
+  valueDate       DateTime
+  bankReference   String?
+  status          PaymentStatus @default(PENDING)
+  escrowTxId      String?  // Escrow transaction ID
+  settlementBatchId String? // Reference to settlement batch
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  invoice         Invoice? @relation(fields: [invoiceId], references: [id])
+  payer           Party    @relation("PaymentsMade", fields: [payerId], references: [id])
+  payee           Party    @relation("PaymentsReceived", fields: [payeeId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+// Disputes and exceptions
+model Dispute {
+  id              String   @id @default(cuid())
+  disputeId       String   @unique // Canonical business ID
+  invoiceId       String?
+  deliveryId      String?
+  contractId      String
+  raisedById      String
+  receivedById    String
+  reasonCode      DisputeReason
+  description     String
+  evidenceHash    String?  // Hash of evidence documents
+  status          DisputeStatus @default(OPEN)
+  resolution      String?  // Resolution details
+  rulingAmount    Float?   // Final ruled amount
+  slaDeadline     DateTime // SLA for resolution
+  assignedToId    String?  // Currently assigned to
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  invoice         Invoice? @relation(fields: [invoiceId], references: [id])
+  contract        Contract @relation(fields: [contractId], references: [id])
+  raisedBy        Party    @relation("DisputesRaised", fields: [raisedById], references: [id])
+  receivedBy      Party    @relation("DisputesReceived", fields: [receivedById], references: [id])
+
+  @@map("disputes")
+}
+
+enum DisputeReason {
+  QUANTITY_VARIANCE
+  PRICE_VARIANCE
+  MISSING_DELIVERY_PROOF
+  LATE_DELIVERY
+  QUALITY_ISSUE
+  DUPLICATE_INVOICE
+  FX_MISMATCH
+  CONTRACT_BREACH
+  OTHER
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  EVIDENCE_REQUESTED
+  PARTIALLY_ACCEPTED
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+// Settlement batches for netting
+model SettlementBatch {
+  id                String   @id @default(cuid())
+  batchId           String   @unique // Canonical business ID
+  period            String   // YYYY-MM format
+  fxRate            Float    // Exchange rate used
+  totalNetAmount    Float
+  status            SettlementStatus @default(PENDING)
+  smartContractTxId String?  // Blockchain transaction ID
+  approvedById      String?  // Treasury approval
+  executedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("settlement_batches")
+}
+
+enum SettlementStatus {
+  PENDING
+  COMPUTED
+  APPROVED
+  EXECUTED
+  FAILED
+}
+
+// Audit trail for all actions
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  // User who performed action
+  action      String   // Action performed
+  entityType  String   // Entity type (invoice, payment, etc.)
+  entityId    String   // Entity ID
+  oldValues   String?  // JSON of previous state
+  newValues   String?  // JSON of new state
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// User management with roles
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  role          UserRole @default(VIEWER)
+  partyId       String?  // Associated party for agency users
+  isActive      Boolean  @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  MINISTER       // Can view everything
+  TREASURY       // MoF/CAGD - can approve settlements
+  AGENCY_CFO     // Agency financial officers
+  AGENCY_CLERK   // Agency data entry
+  AUDITOR        // Read-only audit access
+  VIEWER         // Basic read-only access
+}
