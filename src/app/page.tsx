@@ -272,6 +272,32 @@ export default function NEPARDashboard() {
                 National Energy Payment & Arrears Reconciliation
               </Badge>
             </div>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              {selectedView === 'minister' && (
+                <span className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-1" />
+                  Minister's Cockpit
+                </span>
+              )}
+              {selectedView === 'treasury' && (
+                <span className="flex items-center">
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Treasury Control Room
+                </span>
+              )}
+              {selectedView === 'agency' && (
+                <span className="flex items-center">
+                  <FileText className="h-4 w-4 mr-1" />
+                  Agency CFO Workspace
+                </span>
+              )}
+              {selectedView === 'audit' && (
+                <span className="flex items-center">
+                  <Activity className="h-4 w-4 mr-1" />
+                  Audit & Compliance View
+                </span>
+              )}
+            </div>
           </div>
           <div className="ml-auto flex items-center space-x-4">
             {selectedView === 'minister' && (

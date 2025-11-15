@@ -24,7 +24,9 @@ import {
   FileText,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  ArrowLeft,
+  Home
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -211,6 +213,10 @@ export default function TreasuryControlRoom() {
           <Button>
             <Download className="h-4 w-4 mr-2" />
             Export Report
+          </Button>
+          <Button variant="outline" asChild>
+            <Home className="h-4 w-4 mr-2" />
+            Back to Dashboard
           </Button>
         </div>
       </div>

@@ -26,7 +26,9 @@ import {
   BarChart3,
   PieChart,
   Filter,
-  Search
+  Search,
+  ArrowLeft,
+  Home
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -232,6 +234,10 @@ export default function AgencyCFOWorkspace() {
           <Button>
             <Download className="h-4 w-4 mr-2" />
             Export Report
+          </Button>
+          <Button variant="outline" asChild>
+            <Home className="h-4 w-4 mr-2" />
+            Back to Dashboard
           </Button>
         </div>
       </div>
